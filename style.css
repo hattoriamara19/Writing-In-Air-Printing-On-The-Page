@@ -2,13 +2,12 @@
     box-sizing: border-box;
 }
 
+
 body {
 
     margin: 0;
 
-    font-family:
-        Arial,
-        sans-serif;
+    font-family: Arial, sans-serif;
 
     background: #f4f6f8;
 
@@ -34,8 +33,6 @@ header {
 
     text-align: center;
 
-    padding: 15px;
-
 }
 
 
@@ -47,8 +44,6 @@ header h1 {
 
 
 header p {
-
-    margin-top: 0;
 
     color: #666;
 
@@ -91,13 +86,36 @@ header p {
 
 #camera {
 
-    width: 100%;
-
     display: block;
+
+    width: 100%;
 
     max-height: 500px;
 
     object-fit: cover;
+
+}
+
+
+/* Detected pen position */
+
+.detected-dot {
+
+    position: absolute;
+
+    width: 25px;
+
+    height: 25px;
+
+    border: 3px solid red;
+
+    border-radius: 50%;
+
+    display: none;
+
+    pointer-events: none;
+
+    transform: translate(-50%, -50%);
 
 }
 
@@ -115,8 +133,6 @@ header p {
     color: white;
 
     text-align: center;
-
-    font-size: 18px;
 
 }
 
@@ -167,8 +183,6 @@ header p {
 
     background: white;
 
-    touch-action: none;
-
 }
 
 
@@ -176,8 +190,7 @@ header p {
 
     display: grid;
 
-    grid-template-columns:
-        repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr);
 
     gap: 10px;
 
@@ -195,10 +208,6 @@ button {
     border-radius: 10px;
 
     font-size: 16px;
-
-    cursor: pointer;
-
-    background: #dddddd;
 
 }
 
@@ -241,18 +250,11 @@ button:disabled {
 
     background: white;
 
-    margin-top: 20px;
-
     padding: 15px;
 
     border-radius: 10px;
 
-}
-
-
-.info li {
-
-    margin-bottom: 10px;
+    margin-top: 20px;
 
 }
 
@@ -261,13 +263,9 @@ footer {
 
     text-align: center;
 
-    margin-top: 25px;
+    margin-top: 20px;
 
     color: #777;
-
-    font-size: 14px;
-
-    padding-bottom: 20px;
 
 }
 
@@ -277,7 +275,7 @@ footer {
     .controls {
 
         grid-template-columns:
-            repeat(4, 1fr);
+        repeat(4, 1fr);
 
     }
 
