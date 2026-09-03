@@ -1,23 +1,139 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>Air Pen Writing</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <h2>🖊️ Air Pen Writing</h2>
+    <div class="app">
 
-    <video id="camera" autoplay playsinline></video>
+        <!-- Header -->
+        <header>
+            <h1>🖊️ Air Pen Writing</h1>
+            <p>Write in the air using your pen</p>
+        </header>
 
-    <canvas id="canvas"></canvas>
 
-    <br>
+        <!-- Status -->
+        <div class="status" id="status">
+            Camera is not started
+        </div>
 
-    <button onclick="startCamera()">Start Camera</button>
-    <button onclick="clearCanvas()">Clear</button>
-    <button onclick="saveImage()">Save</button>
+
+        <!-- Camera Section -->
+        <div class="camera-container">
+
+            <video
+                id="camera"
+                autoplay
+                playsinline>
+            </video>
+
+            <div class="camera-message" id="cameraMessage">
+                Press Start Camera
+            </div>
+
+        </div>
+
+
+        <!-- Hidden canvas for future camera processing -->
+        <canvas
+            id="processingCanvas"
+            class="hidden">
+        </canvas>
+
+
+        <!-- Drawing Section -->
+        <section class="drawing-section">
+
+            <h2>Your Writing</h2>
+
+            <div class="drawing-container">
+
+                <canvas id="drawingCanvas"></canvas>
+
+            </div>
+
+        </section>
+
+
+        <!-- Controls -->
+        <section class="controls">
+
+            <button
+                id="startCameraBtn"
+                class="primary">
+                📷 Start Camera
+            </button>
+
+
+            <button
+                id="stopCameraBtn"
+                class="danger"
+                disabled>
+                ⏹ Stop Camera
+            </button>
+
+
+            <button
+                id="clearBtn">
+                🗑 Clear
+            </button>
+
+
+            <button
+                id="saveBtn"
+                class="success">
+                💾 Save Image
+            </button>
+
+        </section>
+
+
+        <!-- Information -->
+        <section class="info">
+
+            <h3>How to use</h3>
+
+            <ol>
+
+                <li>Press Start Camera.</li>
+
+                <li>Allow camera permission.</li>
+
+                <li>Use the back camera.</li>
+
+                <li>
+                    In the next phase, attach a bright coloured
+                    marker near your pen tip.
+                </li>
+
+                <li>
+                    The app will automatically track the pen
+                    and convert its movement into writing.
+                </li>
+
+            </ol>
+
+        </section>
+
+
+        <footer>
+
+            Air Pen Writing Project • HTML + CSS + JavaScript
+
+        </footer>
+
+    </div>
+
 
     <script src="script.js"></script>
 
