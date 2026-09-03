@@ -2,163 +2,139 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
 
     <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+        content="width=device-width, initial-scale=1.0">
 
     <title>Air Pen Writing</title>
 
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet"
+        href="style.css">
+
 </head>
 
 
 <body>
 
-    <div class="app">
+    <h1>✍️ Air Pen Writing</h1>
 
-        <header>
-
-            <h1>🖊️ Air Pen Writing</h1>
-
-            <p>Phase 2: Pen Tip Detection</p>
-
-        </header>
+    <p class="subtitle">
+        Move the pen tip in the air to write
+    </p>
 
 
-        <div class="status" id="status">
+    <!-- CAMERA -->
 
-            Camera is not started
+    <div class="camera-container">
 
-        </div>
-
-
-        <!-- Camera -->
-
-        <div class="camera-container">
-
-            <video
-                id="camera"
-                autoplay
-                playsinline>
-            </video>
-
-
-            <!-- Detection dot -->
-
-            <div
-                id="detectedDot"
-                class="detected-dot">
-            </div>
-
-
-            <div
-                id="cameraMessage"
-                class="camera-message">
-
-                Press Start Camera
-
-            </div>
-
-        </div>
-
-
-        <!-- Hidden processing canvas -->
+        <video
+            id="camera"
+            autoplay
+            playsinline>
+        </video>
 
         <canvas
-            id="processingCanvas"
-            class="hidden">
+            id="processingCanvas">
         </canvas>
 
+        <div id="detectedDot"></div>
 
-        <!-- Drawing area -->
-
-        <section class="drawing-section">
-
-            <h2>Your Air Writing</h2>
-
-            <div class="drawing-container">
-
-                <canvas
-                    id="drawingCanvas">
-                </canvas>
-
-            </div>
-
-        </section>
-
-
-        <!-- Controls -->
-
-        <section class="controls">
-
-            <button
-                id="startCameraBtn"
-                class="primary">
-
-                📷 Start Camera
-
-            </button>
-
-
-            <button
-                id="stopCameraBtn"
-                class="danger"
-                disabled>
-
-                ⏹ Stop Camera
-
-            </button>
-
-
-            <button
-                id="clearBtn">
-
-                🗑 Clear
-
-            </button>
-
-
-            <button
-                id="saveBtn"
-                class="success">
-
-                💾 Save Image
-
-            </button>
-
-        </section>
-
-
-        <section class="info">
-
-            <h3>Current Phase</h3>
-
-            <p>
-
-                🟢 The application is now searching for a
-                bright green marker near your pen tip.
-
-            </p>
-
-            <p>
-
-                Keep the pen marker clearly visible
-                to the camera.
-
-            </p>
-
-        </section>
-
-
-        <footer>
-
-            Air Pen Writing • Phase 2
-
-        </footer>
+        <div id="cameraMessage">
+            Camera not started
+        </div>
 
     </div>
 
+
+    <!-- STATUS -->
+
+    <div id="status">
+        Loading OpenCV...
+    </div>
+
+
+    <!-- CONTROLS -->
+
+    <div class="controls">
+
+        <button
+            id="startCameraBtn"
+            disabled>
+            📷 Start Camera
+        </button>
+
+        <button
+            id="stopCameraBtn"
+            disabled>
+            ⛔ Stop Camera
+        </button>
+
+        <button
+            id="clearBtn">
+            🗑 Clear
+        </button>
+
+        <button
+            id="saveBtn">
+            💾 Save
+        </button>
+
+    </div>
+
+
+    <!-- DRAWING -->
+
+    <div class="drawing-container">
+
+        <canvas
+            id="drawingCanvas">
+        </canvas>
+
+    </div>
+
+
+    <!-- INSTRUCTIONS -->
+
+    <div class="instructions">
+
+        <h2>How to use</h2>
+
+        <p>
+            Put a small bright green or yellow marker
+            near the tip of your ball pen.
+        </p>
+
+        <p>
+            Keep a plain background behind the pen.
+        </p>
+
+        <p>
+            Start the camera.
+        </p>
+
+        <p>
+            Move the pen tip in the air.
+        </p>
+
+        <p>
+            The black line will follow the pen tip.
+        </p>
+
+    </div>
+
+
+    <!-- OPENCV -->
+
+    <script
+        async
+        src="https://docs.opencv.org/4.x/opencv.js"
+        onload="onOpenCvReady();">
+    </script>
+
+
+    <!-- JAVASCRIPT -->
 
     <script src="script.js"></script>
 
