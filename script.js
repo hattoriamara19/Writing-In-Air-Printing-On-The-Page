@@ -1,11 +1,13 @@
 // ======================================
 // AIR PEN WRITING
-// PHASE 2
-// GREEN PEN MARKER DETECTION
+// PHASE 3 + PHASE 4
+// PEN TRACKING + AIR WRITING
 // ======================================
 
 
-// Get elements
+// ======================================
+// GET HTML ELEMENTS
+// ======================================
 
 const camera =
     document.getElementById("camera");
@@ -44,11 +46,27 @@ const saveBtn =
     document.getElementById("saveBtn");
 
 
-// Variables
+// ======================================
+// VARIABLES
+// ======================================
 
 let cameraStream = null;
 
 let detectionRunning = false;
+
+
+// Previous pen position
+
+let previousX = null;
+
+let previousY = null;
+
+
+// Pen settings
+
+let penColor = "black";
+
+let penWidth = 5;
 
 
 // ======================================
@@ -95,7 +113,6 @@ window.addEventListener(
     resizeCanvas
 
 );
-
 
 
 // ======================================
@@ -180,7 +197,6 @@ async function startCamera() {
 }
 
 
-
 // ======================================
 // START DETECTION
 // ======================================
@@ -198,14 +214,18 @@ function startDetection() {
         camera.videoHeight;
 
 
+    previousX = null;
+
+    previousY = null;
+
+
     detectPen();
 
 }
 
 
-
 // ======================================
-// DETECT GREEN MARKER
+// DETECT PEN MARKER
 // ======================================
 
 function detectPen() {
@@ -217,7 +237,7 @@ function detectPen() {
     }
 
 
-    // Draw current camera frame
+    // Copy camera frame
 
     processingContext.drawImage(
 
@@ -234,7 +254,7 @@ function detectPen() {
     );
 
 
-    // Get image pixels
+    // Read camera pixels
 
     const imageData =
         processingContext.getImageData(
@@ -261,8 +281,7 @@ function detectPen() {
     let greenPixels = 0;
 
 
-    // Check every 4th pixel
-    // Faster for mobile
+    // Search for green pixels
 
     for (
 
@@ -303,7 +322,7 @@ function detectPen() {
                 data[index + 2];
 
 
-            // Detect bright green
+            // Green detection
 
             if (
 
@@ -318,9 +337,7 @@ function detectPen() {
 
                 totalX += x;
 
-
                 totalY += y;
-
 
                 greenPixels++;
 
@@ -331,7 +348,9 @@ function detectPen() {
     }
 
 
-    // If green marker found
+    // ==================================
+    // IF PEN MARKER IS FOUND
+    // ==================================
 
     if (greenPixels > 10) {
 
@@ -346,7 +365,20 @@ function detectPen() {
             totalY / greenPixels;
 
 
+        // Show red detection circle
+
         showDetectedPosition(
+
+            centerX,
+
+            centerY
+
+        );
+
+
+        // Draw using pen position
+
+        drawAirWriting(
 
             centerX,
 
@@ -357,7 +389,7 @@ function detectPen() {
 
         statusText.innerText =
 
-            "🟢 Pen marker detected!";
+            "🟢 Pen detected — Writing";
 
 
     }
@@ -369,13 +401,21 @@ function detectPen() {
             "none";
 
 
+        // Reset previous position
+
+        previousX = null;
+
+        previousY = null;
+
+
         statusText.innerText =
 
             "Searching for green pen marker...";
 
-
     }
 
+
+    // Continue detection
 
     requestAnimationFrame(
 
@@ -386,9 +426,8 @@ function detectPen() {
 }
 
 
-
 // ======================================
-// SHOW DETECTED POSITION
+// SHOW DETECTED PEN POSITION
 // ======================================
 
 function showDetectedPosition(
@@ -440,6 +479,124 @@ function showDetectedPosition(
 }
 
 
+// ======================================
+// DRAW AIR WRITING
+// ======================================
+
+function drawAirWriting(
+
+    cameraX,
+
+    cameraY
+
+) {
+
+
+    // Convert camera position
+    // to drawing canvas position
+
+
+    const drawX =
+
+        cameraX *
+
+        (
+
+            drawingCanvas.width /
+
+            processingCanvas.width
+
+        );
+
+
+    const drawY =
+
+        cameraY *
+
+        (
+
+            drawingCanvas.height /
+
+            processingCanvas.height
+
+        );
+
+
+    // First point
+
+    if (
+
+        previousX === null ||
+
+        previousY === null
+
+    ) {
+
+
+        previousX = drawX;
+
+        previousY = drawY;
+
+
+        return;
+
+    }
+
+
+    // Draw line
+
+    drawingContext.beginPath();
+
+
+    drawingContext.moveTo(
+
+        previousX,
+
+        previousY
+
+    );
+
+
+    drawingContext.lineTo(
+
+        drawX,
+
+        drawY
+
+    );
+
+
+    drawingContext.strokeStyle =
+
+        penColor;
+
+
+    drawingContext.lineWidth =
+
+        penWidth;
+
+
+    drawingContext.lineCap =
+
+        "round";
+
+
+    drawingContext.lineJoin =
+
+        "round";
+
+
+    drawingContext.stroke();
+
+
+    // Save new position
+
+    previousX = drawX;
+
+    previousY = drawY;
+
+}
+
 
 // ======================================
 // STOP CAMERA
@@ -450,6 +607,11 @@ function stopCamera() {
 
     detectionRunning =
         false;
+
+
+    previousX = null;
+
+    previousY = null;
 
 
     if (cameraStream) {
@@ -504,7 +666,6 @@ function stopCamera() {
 }
 
 
-
 // ======================================
 // CLEAR WRITING
 // ======================================
@@ -529,11 +690,15 @@ function clearCanvas() {
     );
 
 
+    previousX = null;
+
+    previousY = null;
+
+
     statusText.innerText =
         "Writing cleared";
 
 }
-
 
 
 // ======================================
@@ -569,14 +734,27 @@ function saveImage() {
         "air-writing.png";
 
 
+    document.body.appendChild(
+
+        link
+
+    );
+
+
     link.click();
+
+
+    document.body.removeChild(
+
+        link
+
+    );
 
 
     statusText.innerText =
         "Image saved 💾";
 
 }
-
 
 
 // ======================================
@@ -615,5 +793,18 @@ saveBtn.addEventListener(
     "click",
 
     saveImage
+
+);
+
+
+// ======================================
+// CLOSE CAMERA WHEN PAGE CLOSES
+// ======================================
+
+window.addEventListener(
+
+    "beforeunload",
+
+    stopCamera
 
 );
