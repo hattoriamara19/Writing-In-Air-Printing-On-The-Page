@@ -1,67 +1,72 @@
-// =====================================
+// ======================================
 // AIR PEN WRITING
-// PHASE 1
-// CAMERA + DRAWING CANVAS
-// =====================================
+// PHASE 2
+// GREEN PEN MARKER DETECTION
+// ======================================
 
 
-// Get HTML elements
+// Get elements
 
 const camera =
     document.getElementById("camera");
 
-
 const statusText =
     document.getElementById("status");
-
 
 const cameraMessage =
     document.getElementById("cameraMessage");
 
+const detectedDot =
+    document.getElementById("detectedDot");
+
+const processingCanvas =
+    document.getElementById("processingCanvas");
+
+const processingContext =
+    processingCanvas.getContext("2d");
+
+const drawingCanvas =
+    document.getElementById("drawingCanvas");
+
+const drawingContext =
+    drawingCanvas.getContext("2d");
 
 const startCameraBtn =
     document.getElementById("startCameraBtn");
 
-
 const stopCameraBtn =
     document.getElementById("stopCameraBtn");
 
-
 const clearBtn =
     document.getElementById("clearBtn");
-
 
 const saveBtn =
     document.getElementById("saveBtn");
 
 
-const drawingCanvas =
-    document.getElementById("drawingCanvas");
-
-
-const drawingContext =
-    drawingCanvas.getContext("2d");
-
+// Variables
 
 let cameraStream = null;
 
+let detectionRunning = false;
 
-// =====================================
+
+// ======================================
 // SET UP DRAWING CANVAS
-// =====================================
+// ======================================
 
 function resizeCanvas() {
 
-    const rectangle =
+    const rect =
         drawingCanvas.getBoundingClientRect();
 
 
     drawingCanvas.width =
-        rectangle.width;
+        rect.width;
 
 
     drawingCanvas.height =
-        rectangle.height;
+        rect.height;
 
 
     drawingContext.fillStyle =
@@ -69,41 +74,39 @@ function resizeCanvas() {
 
 
     drawingContext.fillRect(
+
         0,
+
         0,
+
         drawingCanvas.width,
+
         drawingCanvas.height
+
     );
 
 }
 
 
 window.addEventListener(
+
     "load",
-    resizeCanvas
-);
 
-
-window.addEventListener(
-    "resize",
     resizeCanvas
+
 );
 
 
 
-// =====================================
+// ======================================
 // START CAMERA
-// =====================================
+// ======================================
 
 async function startCamera() {
 
     try {
 
         statusText.innerText =
-            "Requesting camera permission...";
-
-
-        cameraMessage.innerText =
             "Starting camera...";
 
 
@@ -113,7 +116,9 @@ async function startCamera() {
                 video: {
 
                     facingMode: {
+
                         ideal: "environment"
+
                     }
 
                 },
@@ -131,16 +136,24 @@ async function startCamera() {
             "none";
 
 
-        statusText.innerText =
-            "Camera started successfully 📷";
-
-
         startCameraBtn.disabled =
             true;
 
 
         stopCameraBtn.disabled =
             false;
+
+
+        camera.onloadedmetadata =
+            function () {
+
+                startDetection();
+
+            };
+
+
+        statusText.innerText =
+            "Camera started. Looking for green pen marker 🟢";
 
 
     }
@@ -154,13 +167,12 @@ async function startCamera() {
             "Camera error: " + error.message;
 
 
-        cameraMessage.innerText =
-            "Camera could not start";
-
-
         alert(
+
             "Camera could not start.\n\n" +
-            "Make sure you allow camera permission."
+
+            "Please allow camera permission."
+
         );
 
     }
@@ -169,23 +181,291 @@ async function startCamera() {
 
 
 
-// =====================================
+// ======================================
+// START DETECTION
+// ======================================
+
+function startDetection() {
+
+    detectionRunning = true;
+
+
+    processingCanvas.width =
+        camera.videoWidth;
+
+
+    processingCanvas.height =
+        camera.videoHeight;
+
+
+    detectPen();
+
+}
+
+
+
+// ======================================
+// DETECT GREEN MARKER
+// ======================================
+
+function detectPen() {
+
+    if (!detectionRunning) {
+
+        return;
+
+    }
+
+
+    // Draw current camera frame
+
+    processingContext.drawImage(
+
+        camera,
+
+        0,
+
+        0,
+
+        processingCanvas.width,
+
+        processingCanvas.height
+
+    );
+
+
+    // Get image pixels
+
+    const imageData =
+        processingContext.getImageData(
+
+            0,
+
+            0,
+
+            processingCanvas.width,
+
+            processingCanvas.height
+
+        );
+
+
+    const data =
+        imageData.data;
+
+
+    let totalX = 0;
+
+    let totalY = 0;
+
+    let greenPixels = 0;
+
+
+    // Check every 4th pixel
+    // Faster for mobile
+
+    for (
+
+        let y = 0;
+
+        y < processingCanvas.height;
+
+        y += 4
+
+    ) {
+
+        for (
+
+            let x = 0;
+
+            x < processingCanvas.width;
+
+            x += 4
+
+        ) {
+
+            const index =
+
+                (y * processingCanvas.width + x)
+
+                * 4;
+
+
+            const red =
+                data[index];
+
+
+            const green =
+                data[index + 1];
+
+
+            const blue =
+                data[index + 2];
+
+
+            // Detect bright green
+
+            if (
+
+                green > 120 &&
+
+                green > red * 1.3 &&
+
+                green > blue * 1.2
+
+            ) {
+
+
+                totalX += x;
+
+
+                totalY += y;
+
+
+                greenPixels++;
+
+            }
+
+        }
+
+    }
+
+
+    // If green marker found
+
+    if (greenPixels > 10) {
+
+
+        const centerX =
+
+            totalX / greenPixels;
+
+
+        const centerY =
+
+            totalY / greenPixels;
+
+
+        showDetectedPosition(
+
+            centerX,
+
+            centerY
+
+        );
+
+
+        statusText.innerText =
+
+            "🟢 Pen marker detected!";
+
+
+    }
+
+    else {
+
+
+        detectedDot.style.display =
+            "none";
+
+
+        statusText.innerText =
+
+            "Searching for green pen marker...";
+
+
+    }
+
+
+    requestAnimationFrame(
+
+        detectPen
+
+    );
+
+}
+
+
+
+// ======================================
+// SHOW DETECTED POSITION
+// ======================================
+
+function showDetectedPosition(
+
+    x,
+
+    y
+
+) {
+
+
+    const scaleX =
+
+        camera.clientWidth /
+
+        processingCanvas.width;
+
+
+    const scaleY =
+
+        camera.clientHeight /
+
+        processingCanvas.height;
+
+
+    const screenX =
+
+        x * scaleX;
+
+
+    const screenY =
+
+        y * scaleY;
+
+
+    detectedDot.style.display =
+        "block";
+
+
+    detectedDot.style.left =
+
+        screenX + "px";
+
+
+    detectedDot.style.top =
+
+        screenY + "px";
+
+}
+
+
+
+// ======================================
 // STOP CAMERA
-// =====================================
+// ======================================
 
 function stopCamera() {
 
+
+    detectionRunning =
+        false;
+
+
     if (cameraStream) {
 
-        const tracks =
-            cameraStream.getTracks();
+
+        cameraStream
+
+            .getTracks()
+
+            .forEach(function (track) {
 
 
-        tracks.forEach(function(track) {
+                track.stop();
 
-            track.stop();
 
-        });
+            });
 
 
         cameraStream =
@@ -198,15 +478,15 @@ function stopCamera() {
         null;
 
 
+    detectedDot.style.display =
+        "none";
+
+
     cameraMessage.style.display =
         "block";
 
 
     cameraMessage.innerText =
-        "Camera stopped";
-
-
-    statusText.innerText =
         "Camera stopped";
 
 
@@ -217,15 +497,20 @@ function stopCamera() {
     stopCameraBtn.disabled =
         true;
 
+
+    statusText.innerText =
+        "Camera stopped";
+
 }
 
 
 
-// =====================================
-// CLEAR DRAWING CANVAS
-// =====================================
+// ======================================
+// CLEAR WRITING
+// ======================================
 
 function clearCanvas() {
+
 
     drawingContext.fillStyle =
         "white";
@@ -251,84 +536,84 @@ function clearCanvas() {
 
 
 
-// =====================================
-// SAVE DRAWING AS IMAGE
-// =====================================
+// ======================================
+// SAVE IMAGE
+// ======================================
 
 function saveImage() {
 
-    const imageData =
+
+    const image =
+
         drawingCanvas.toDataURL(
+
             "image/png"
+
         );
 
 
-    const downloadLink =
-        document.createElement("a");
+    const link =
+
+        document.createElement(
+
+            "a"
+
+        );
 
 
-    downloadLink.href =
-        imageData;
+    link.href =
+        image;
 
 
-    downloadLink.download =
+    link.download =
         "air-writing.png";
 
 
-    document.body.appendChild(
-        downloadLink
-    );
-
-
-    downloadLink.click();
-
-
-    document.body.removeChild(
-        downloadLink
-    );
+    link.click();
 
 
     statusText.innerText =
-        "Image saved successfully 💾";
+        "Image saved 💾";
 
 }
 
 
 
-// =====================================
+// ======================================
 // BUTTON EVENTS
-// =====================================
+// ======================================
 
 startCameraBtn.addEventListener(
+
     "click",
+
     startCamera
+
 );
 
 
 stopCameraBtn.addEventListener(
+
     "click",
+
     stopCamera
+
 );
 
 
 clearBtn.addEventListener(
+
     "click",
+
     clearCanvas
+
 );
 
 
 saveBtn.addEventListener(
+
     "click",
+
     saveImage
-);
 
-
-
-// =====================================
-// CLEAN UP CAMERA
-// =====================================
-
-window.addEventListener(
-    "beforeunload",
-    stopCamera
 );
