@@ -1,43 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+    <title>Air Pen Writing - Version 4</title>
 
-    <title>Air Pen Writing</title>
-
-    <link rel="stylesheet"
-        href="style.css">
-
+    <link rel="stylesheet" href="style.css">
 </head>
-
 
 <body>
 
     <h1>✍️ Air Pen Writing</h1>
 
     <p class="subtitle">
-        Move the pen tip in the air to write
+        Version 4 • Front Camera • OpenCV.js
     </p>
-
-
-    <!-- CAMERA -->
 
     <div class="camera-container">
 
         <video
             id="camera"
             autoplay
+            muted
             playsinline>
         </video>
 
-        <canvas
-            id="processingCanvas">
-        </canvas>
+        <canvas id="processingCanvas"></canvas>
 
         <div id="detectedDot"></div>
 
@@ -47,85 +36,72 @@
 
     </div>
 
-
-    <!-- STATUS -->
-
     <div id="status">
         Loading OpenCV...
     </div>
 
-
-    <!-- CONTROLS -->
-
     <div class="controls">
 
-        <button
-            id="startCameraBtn"
-            disabled>
-            📷 Start Camera
+        <button id="startCameraBtn" disabled>
+            📷 Start Front Camera
         </button>
 
-        <button
-            id="stopCameraBtn"
-            disabled>
+        <button id="stopCameraBtn" disabled>
             ⛔ Stop Camera
         </button>
 
-        <button
-            id="clearBtn">
+        <button id="clearBtn">
             🗑 Clear
         </button>
 
-        <button
-            id="saveBtn">
+        <button id="saveBtn">
             💾 Save
         </button>
 
     </div>
 
-
-    <!-- DRAWING -->
-
     <div class="drawing-container">
 
-        <canvas
-            id="drawingCanvas">
-        </canvas>
+        <canvas id="drawingCanvas"></canvas>
 
     </div>
-
-
-    <!-- INSTRUCTIONS -->
 
     <div class="instructions">
 
         <h2>How to use</h2>
 
         <p>
-            Put a small bright green or yellow marker
-            near the tip of your ball pen.
+            1. Use a normal ball pen.
         </p>
 
         <p>
-            Keep a plain background behind the pen.
+            2. Start the front camera.
         </p>
 
         <p>
-            Start the camera.
+            3. Keep a plain light background.
         </p>
 
         <p>
-            Move the pen tip in the air.
+            4. Keep the pen clearly visible.
         </p>
 
         <p>
-            The black line will follow the pen tip.
+            5. Move the pen tip in the air.
+        </p>
+
+        <p>
+            6. The red point shows the estimated pen tip.
+        </p>
+
+        <p>
+            7. The movement is transferred to the white
+            writing area.
         </p>
 
     </div>
 
-
-    <!-- OPENCV -->
+    <!-- OpenCV.js -->
 
     <script
         async
@@ -133,11 +109,9 @@
         onload="onOpenCvReady();">
     </script>
 
-
-    <!-- JAVASCRIPT -->
+    <!-- Project JavaScript -->
 
     <script src="script.js"></script>
 
 </body>
-
 </html>
