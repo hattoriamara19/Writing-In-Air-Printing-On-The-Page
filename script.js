@@ -1,6 +1,20 @@
 // ============================================
 // AIR PEN WRITING
-// OPENCV.JS PEN-TIP TRACKING
+// VERSION 4
+//
+// FRONT CAMERA
+// NORMAL BALL PEN
+// OPENCV.JS
+//
+// Detection:
+// Grayscale
+// Blur
+// Adaptive threshold
+// Contours
+// Shape filtering
+// Pen-tip estimation
+// Position smoothing
+// Air writing
 // ============================================
 
 
@@ -11,12 +25,8 @@
 const camera =
     document.getElementById("camera");
 
-
 const processingCanvas =
-    document.getElementById(
-        "processingCanvas"
-    );
-
+    document.getElementById("processingCanvas");
 
 const processingContext =
     processingCanvas.getContext(
@@ -26,54 +36,35 @@ const processingContext =
         }
     );
 
-
 const drawingCanvas =
-    document.getElementById(
-        "drawingCanvas"
-    );
-
+    document.getElementById("drawingCanvas");
 
 const drawingContext =
-    drawingCanvas.getContext(
-        "2d"
-    );
-
+    drawingCanvas.getContext("2d");
 
 const detectedDot =
-    document.getElementById(
-        "detectedDot"
-    );
-
+    document.getElementById("detectedDot");
 
 const cameraMessage =
-    document.getElementById(
-        "cameraMessage"
-    );
-
+    document.getElementById("cameraMessage");
 
 const statusText =
-    document.getElementById(
-        "status"
-    );
-
+    document.getElementById("status");
 
 const startCameraBtn =
     document.getElementById(
         "startCameraBtn"
     );
 
-
 const stopCameraBtn =
     document.getElementById(
         "stopCameraBtn"
     );
 
-
 const clearBtn =
     document.getElementById(
         "clearBtn"
     );
-
 
 const saveBtn =
     document.getElementById(
@@ -92,7 +83,7 @@ let detectionRunning = false;
 let openCVReady = false;
 
 
-// Previous position
+// Previous drawing position
 
 let previousX = null;
 
@@ -106,7 +97,7 @@ let smoothX = null;
 let smoothY = null;
 
 
-// Drawing settings
+// Pen appearance
 
 let penColor = "black";
 
@@ -114,37 +105,22 @@ let penWidth = 5;
 
 
 // ============================================
-// COLOR DETECTION SETTINGS
-// ============================================
-//
-// We detect a bright GREEN marker.
-//
-// HSV ranges:
-//
-// H = hue
-// S = saturation
-// V = brightness
-//
+// DETECTION PARAMETERS
 // ============================================
 
-const LOWER_H =
-    35;
+const PROCESS_WIDTH = 320;
 
-const LOWER_S =
-    80;
-
-const LOWER_V =
-    80;
+const PROCESS_HEIGHT = 240;
 
 
-const UPPER_H =
-    90;
+// Minimum contour size
 
-const UPPER_S =
-    255;
+const MIN_AREA = 30;
 
-const UPPER_V =
-    255;
+
+// Maximum contour size
+
+const MAX_AREA = 15000;
 
 
 // ============================================
@@ -153,19 +129,13 @@ const UPPER_V =
 
 function onOpenCvReady() {
 
-    openCVReady =
-        true;
-
+    openCVReady = true;
 
     statusText.innerText =
-        "OpenCV loaded. Ready to start camera.";
+        "OpenCV loaded. Ready.";
 
-
-    startCameraBtn.disabled =
-        false;
-
+    startCameraBtn.disabled = false;
 }
-
 
 window.onOpenCvReady =
     onOpenCvReady;
@@ -178,36 +148,24 @@ window.onOpenCvReady =
 function resizeCanvas() {
 
     const rect =
-        drawingCanvas
-            .getBoundingClientRect();
-
+        drawingCanvas.getBoundingClientRect();
 
     drawingCanvas.width =
         rect.width;
 
-
     drawingCanvas.height =
         rect.height;
-
 
     drawingContext.fillStyle =
         "white";
 
-
     drawingContext.fillRect(
-
         0,
-
         0,
-
         drawingCanvas.width,
-
         drawingCanvas.height
-
     );
-
 }
-
 
 window.addEventListener(
     "load",
@@ -216,7 +174,7 @@ window.addEventListener(
 
 
 // ============================================
-// START CAMERA
+// START FRONT CAMERA
 // ============================================
 
 async function startCamera() {
@@ -224,19 +182,25 @@ async function startCamera() {
     if (!openCVReady) {
 
         alert(
-            "Please wait for OpenCV to load."
+            "OpenCV is still loading."
         );
 
         return;
-
     }
-
 
     try {
 
         statusText.innerText =
-            "Starting camera...";
+            "Starting front camera...";
 
+
+        /*
+         * IMPORTANT:
+         *
+         * facingMode = user
+         *
+         * means FRONT CAMERA.
+         */
 
         cameraStream =
             await navigator.mediaDevices
@@ -245,18 +209,15 @@ async function startCamera() {
                     video: {
 
                         facingMode: {
-                            ideal:
-                                "environment"
+                            exact: "user"
                         },
 
                         width: {
-                            ideal:
-                                640
+                            ideal: 640
                         },
 
                         height: {
-                            ideal:
-                                480
+                            ideal: 480
                         }
 
                     },
@@ -277,7 +238,6 @@ async function startCamera() {
         startCameraBtn.disabled =
             true;
 
-
         stopCameraBtn.disabled =
             false;
 
@@ -287,7 +247,6 @@ async function startCamera() {
 
                 processingCanvas.width =
                     camera.videoWidth;
-
 
                 processingCanvas.height =
                     camera.videoHeight;
@@ -305,14 +264,75 @@ async function startCamera() {
         console.error(error);
 
 
-        statusText.innerText =
-            "Camera error";
+        /*
+         * Some phones may not support
+         * exact user camera selection.
+         *
+         * Try normal front camera.
+         */
+
+        try {
+
+            cameraStream =
+                await navigator.mediaDevices
+                    .getUserMedia({
+
+                        video: {
+                            facingMode: "user"
+                        },
+
+                        audio: false
+
+                    });
 
 
-        alert(
-            "Camera could not start.\n\n" +
-            "Allow camera permission and try again."
-        );
+            camera.srcObject =
+                cameraStream;
+
+
+            cameraMessage.style.display =
+                "none";
+
+
+            startCameraBtn.disabled =
+                true;
+
+            stopCameraBtn.disabled =
+                false;
+
+
+            camera.onloadedmetadata =
+                function () {
+
+                    processingCanvas.width =
+                        camera.videoWidth;
+
+                    processingCanvas.height =
+                        camera.videoHeight;
+
+                    startDetection();
+
+                };
+
+        }
+
+        catch (secondError) {
+
+            console.error(
+                secondError
+            );
+
+
+            statusText.innerText =
+                "Camera error";
+
+
+            alert(
+                "Front camera could not start.\n\n" +
+                "Please allow camera permission."
+            );
+
+        }
 
     }
 
@@ -329,20 +349,13 @@ function startDetection() {
         true;
 
 
-    previousX =
-        null;
+    previousX = null;
 
+    previousY = null;
 
-    previousY =
-        null;
+    smoothX = null;
 
-
-    smoothX =
-        null;
-
-
-    smoothY =
-        null;
+    smoothY = null;
 
 
     detectPen();
@@ -351,7 +364,7 @@ function startDetection() {
 
 
 // ============================================
-// PEN DETECTION
+// DETECT PEN
 // ============================================
 
 function detectPen() {
@@ -359,12 +372,11 @@ function detectPen() {
     if (!detectionRunning) {
 
         return;
-
     }
 
 
     // ========================================
-    // COPY VIDEO FRAME
+    // DRAW CAMERA INTO PROCESSING CANVAS
     // ========================================
 
     processingContext.drawImage(
@@ -372,18 +384,16 @@ function detectPen() {
         camera,
 
         0,
-
         0,
 
         processingCanvas.width,
-
         processingCanvas.height
 
     );
 
 
     // ========================================
-    // READ WITH OPENCV
+    // READ IMAGE
     // ========================================
 
     let src =
@@ -407,18 +417,18 @@ function detectPen() {
         small,
 
         new cv.Size(
-            320,
-            240
+            PROCESS_WIDTH,
+            PROCESS_HEIGHT
         )
 
     );
 
 
     // ========================================
-    // RGBA → HSV
+    // GRAYSCALE
     // ========================================
 
-    let hsv =
+    let gray =
         new cv.Mat();
 
 
@@ -426,94 +436,85 @@ function detectPen() {
 
         small,
 
-        hsv,
+        gray,
 
-        cv.COLOR_RGBA2HSV
+        cv.COLOR_RGBA2GRAY
 
     );
 
 
     // ========================================
-    // GREEN MASK
+    // BLUR
     // ========================================
 
-    let lower =
-        new cv.Mat(
-            hsv.rows,
-            hsv.cols,
-            hsv.type(),
-            [
-                LOWER_H,
-                LOWER_S,
-                LOWER_V,
-                0
-            ]
-        );
-
-
-    let upper =
-        new cv.Mat(
-            hsv.rows,
-            hsv.cols,
-            hsv.type(),
-            [
-                UPPER_H,
-                UPPER_S,
-                UPPER_V,
-                0
-            ]
-        );
-
-
-    let mask =
+    let blurred =
         new cv.Mat();
 
 
-    cv.inRange(
+    cv.GaussianBlur(
 
-        hsv,
+        gray,
 
-        lower,
+        blurred,
 
-        upper,
+        new cv.Size(
+            5,
+            5
+        ),
 
-        mask
+        0
 
     );
 
 
     // ========================================
-    // REMOVE NOISE
+    // ADAPTIVE THRESHOLD
+    // ========================================
+
+    let binary =
+        new cv.Mat();
+
+
+    cv.adaptiveThreshold(
+
+        blurred,
+
+        binary,
+
+        255,
+
+        cv.ADAPTIVE_THRESH_GAUSSIAN_C,
+
+        cv.THRESH_BINARY_INV,
+
+        21,
+
+        7
+
+    );
+
+
+    // ========================================
+    // MORPHOLOGY
     // ========================================
 
     let kernel =
         cv.Mat.ones(
-            5,
-            5,
+
+            3,
+            3,
             cv.CV_8U
+
         );
 
 
     cv.morphologyEx(
 
-        mask,
+        binary,
 
-        mask,
+        binary,
 
         cv.MORPH_OPEN,
-
-        kernel
-
-    );
-
-
-    cv.morphologyEx(
-
-        mask,
-
-        mask,
-
-        cv.MORPH_CLOSE,
 
         kernel
 
@@ -534,7 +535,7 @@ function detectPen() {
 
     cv.findContours(
 
-        mask,
+        binary,
 
         contours,
 
@@ -547,22 +548,23 @@ function detectPen() {
     );
 
 
-    let bestContour =
-        null;
-
-
-    let bestArea =
-        0;
-
-
     // ========================================
-    // FIND LARGEST GREEN OBJECT
+    // SEARCH FOR PEN
     // ========================================
+
+    let bestContour = null;
+
+    let bestScore = 0;
+
 
     for (
+
         let i = 0;
+
         i < contours.size();
+
         i++
+
     ) {
 
         let contour =
@@ -575,9 +577,139 @@ function detectPen() {
             );
 
 
+        // Ignore tiny objects
+
         if (
-            area > bestArea &&
-            area > 20
+            area < MIN_AREA
+        ) {
+
+            contour.delete();
+
+            continue;
+
+        }
+
+
+        // Ignore huge objects
+
+        if (
+            area > MAX_AREA
+        ) {
+
+            contour.delete();
+
+            continue;
+
+        }
+
+
+        let rect =
+            cv.boundingRect(
+                contour
+            );
+
+
+        let width =
+            rect.width;
+
+        let height =
+            rect.height;
+
+
+        if (
+            width < 8 ||
+            height < 8
+        ) {
+
+            contour.delete();
+
+            continue;
+
+        }
+
+
+        // ==================================
+        // ASPECT RATIO
+        // ==================================
+
+        let longest =
+            Math.max(
+                width,
+                height
+            );
+
+
+        let shortest =
+            Math.min(
+                width,
+                height
+            );
+
+
+        let aspect =
+            longest /
+            shortest;
+
+
+        /*
+         * A pen normally forms a
+         * relatively long object.
+         */
+
+        if (
+            aspect < 2
+        ) {
+
+            contour.delete();
+
+            continue;
+
+        }
+
+
+        // ==================================
+        // RECTANGULARITY
+        // ==================================
+
+        let rectangleArea =
+            width *
+            height;
+
+
+        let rectangularity =
+            area /
+            rectangleArea;
+
+
+        /*
+         * Extremely irregular noise
+         * is rejected.
+         */
+
+        if (
+            rectangularity < 0.10
+        ) {
+
+            contour.delete();
+
+            continue;
+
+        }
+
+
+        // ==================================
+        // SCORE
+        // ==================================
+
+        let score =
+            aspect *
+            rectangularity *
+            area;
+
+
+        if (
+            score >
+            bestScore
         ) {
 
             if (bestContour) {
@@ -590,9 +722,8 @@ function detectPen() {
             bestContour =
                 contour;
 
-
-            bestArea =
-                area;
+            bestScore =
+                score;
 
         }
 
@@ -606,123 +737,110 @@ function detectPen() {
 
 
     // ========================================
-    // PEN TIP FOUND
+    // PEN FOUND
     // ========================================
 
     if (bestContour) {
 
-        let moments =
-            cv.moments(
+        let rect =
+            cv.boundingRect(
                 bestContour
             );
 
 
+        let tip =
+            estimatePenTip(
+                bestContour,
+                rect
+            );
+
+
+        // ==================================
+        // SCALE BACK
+        // ==================================
+
+        let cameraX =
+            tip.x *
+            (
+                processingCanvas.width /
+                PROCESS_WIDTH
+            );
+
+
+        let cameraY =
+            tip.y *
+            (
+                processingCanvas.height /
+                PROCESS_HEIGHT
+            );
+
+
+        // ==================================
+        // SMOOTH
+        // ==================================
+
         if (
-            moments.m00 !== 0
+            smoothX === null
         ) {
 
-            let centerX =
-                moments.m10 /
-                moments.m00;
+            smoothX =
+                cameraX;
 
-
-            let centerY =
-                moments.m01 /
-                moments.m00;
-
-
-            // ==================================
-            // SCALE TO CAMERA
-            // ==================================
-
-            let cameraX =
-                centerX *
-                (
-                    processingCanvas.width /
-                    320
-                );
-
-
-            let cameraY =
-                centerY *
-                (
-                    processingCanvas.height /
-                    240
-                );
-
-
-            // ==================================
-            // SMOOTH POSITION
-            // ==================================
-
-            if (
-                smoothX === null
-            ) {
-
-                smoothX =
-                    cameraX;
-
-                smoothY =
-                    cameraY;
-
-            }
-
-            else {
-
-                const smoothing =
-                    0.35;
-
-
-                smoothX =
-                    smoothX +
-                    (
-                        cameraX -
-                        smoothX
-                    ) *
-                    smoothing;
-
-
-                smoothY =
-                    smoothY +
-                    (
-                        cameraY -
-                        smoothY
-                    ) *
-                    smoothing;
-
-            }
-
-
-            // ==================================
-            // SHOW DOT
-            // ==================================
-
-            showDetectedPosition(
-
-                smoothX,
-
-                smoothY
-
-            );
-
-
-            // ==================================
-            // WRITE
-            // ==================================
-
-            drawAirWriting(
-
-                smoothX,
-
-                smoothY
-
-            );
-
-
-            statusText.innerText =
-                "🟢 Pen tip detected — Writing";
+            smoothY =
+                cameraY;
 
         }
+
+        else {
+
+            const smoothing =
+                0.30;
+
+
+            smoothX +=
+                (
+                    cameraX -
+                    smoothX
+                ) *
+                smoothing;
+
+
+            smoothY +=
+                (
+                    cameraY -
+                    smoothY
+                ) *
+                smoothing;
+
+        }
+
+
+        // ==================================
+        // DISPLAY POINT
+        // ==================================
+
+        showDetectedPosition(
+
+            smoothX,
+            smoothY
+
+        );
+
+
+        // ==================================
+        // DRAW
+        // ==================================
+
+        drawAirWriting(
+
+            smoothX,
+            smoothY
+
+        );
+
+
+        statusText.innerText =
+            "✍️ Pen detected — Writing";
 
 
         bestContour.delete();
@@ -736,48 +854,42 @@ function detectPen() {
 
 
         /*
-          IMPORTANT:
-          Do NOT immediately connect the next
-          detected point after losing the marker.
-        */
+         * Do not connect writing across
+         * a lost detection.
+         */
 
         previousX =
             null;
 
-
         previousY =
             null;
 
-
         smoothX =
             null;
-
 
         smoothY =
             null;
 
 
         statusText.innerText =
-            "Searching for pen tip...";
+            "Searching for pen...";
 
     }
 
 
     // ========================================
-    // FREE OPENCV MEMORY
+    // RELEASE OPENCV MEMORY
     // ========================================
 
     src.delete();
 
     small.delete();
 
-    hsv.delete();
+    gray.delete();
 
-    lower.delete();
+    blurred.delete();
 
-    upper.delete();
-
-    mask.delete();
+    binary.delete();
 
     kernel.delete();
 
@@ -798,15 +910,232 @@ function detectPen() {
 
 
 // ============================================
-// SHOW DETECTED POINT
+// ESTIMATE PEN TIP
+// ============================================
+
+function estimatePenTip(
+    contour,
+    rect
+) {
+
+    /*
+     * We find the contour points closest
+     * to the two ends of the bounding box.
+     */
+
+    let points = [];
+
+
+    for (
+        let i = 0;
+        i < contour.data32S.length;
+        i += 2
+    ) {
+
+        points.push({
+
+            x:
+                contour.data32S[i],
+
+            y:
+                contour.data32S[i + 1]
+
+        });
+
+    }
+
+
+    // ========================================
+    // HORIZONTAL PEN
+    // ========================================
+
+    if (
+        rect.width >=
+        rect.height
+    ) {
+
+        let left =
+            points[0];
+
+        let right =
+            points[0];
+
+
+        for (
+            const p of points
+        ) {
+
+            if (
+                p.x <
+                left.x
+            ) {
+
+                left =
+                    p;
+
+            }
+
+
+            if (
+                p.x >
+                right.x
+            ) {
+
+                right =
+                    p;
+
+            }
+
+        }
+
+
+        /*
+         * Select the end with the
+         * smaller local width.
+         *
+         * This approximates the pointed
+         * pen-tip side.
+         */
+
+        let leftDistance =
+            distanceFromCorner(
+                left,
+                rect.x,
+                rect.y,
+                rect.height
+            );
+
+
+        let rightDistance =
+            distanceFromCorner(
+                right,
+                rect.x +
+                rect.width,
+                rect.y,
+                rect.height
+            );
+
+
+        if (
+            leftDistance <
+            rightDistance
+        ) {
+
+            return left;
+
+        }
+
+        return right;
+
+    }
+
+
+    // ========================================
+    // VERTICAL PEN
+    // ========================================
+
+    let top =
+        points[0];
+
+    let bottom =
+        points[0];
+
+
+    for (
+        const p of points
+    ) {
+
+        if (
+            p.y <
+            top.y
+        ) {
+
+            top =
+                p;
+
+        }
+
+
+        if (
+            p.y >
+            bottom.y
+        ) {
+
+            bottom =
+                p;
+
+        }
+
+    }
+
+
+    let topDistance =
+        distanceFromCorner(
+            top,
+            rect.x,
+            rect.y,
+            rect.width
+        );
+
+
+    let bottomDistance =
+        distanceFromCorner(
+            bottom,
+            rect.x,
+            rect.y +
+            rect.height,
+            rect.width
+        );
+
+
+    if (
+        topDistance <
+        bottomDistance
+    ) {
+
+        return top;
+
+    }
+
+
+    return bottom;
+
+}
+
+
+// ============================================
+// HELPER
+// ============================================
+
+function distanceFromCorner(
+    point,
+    x,
+    y,
+    size
+) {
+
+    const center =
+        size / 2;
+
+
+    return Math.abs(
+        point.y -
+        (
+            y +
+            center
+        )
+    );
+
+}
+
+
+// ============================================
+// SHOW DETECTED POSITION
 // ============================================
 
 function showDetectedPosition(
-
     x,
-
     y
-
 ) {
 
     const scaleX =
@@ -819,8 +1148,17 @@ function showDetectedPosition(
         processingCanvas.height;
 
 
+    /*
+     * Camera preview is mirrored,
+     * therefore mirror X position
+     * of detection dot.
+     */
+
     const screenX =
-        x * scaleX;
+        camera.clientWidth -
+        (
+            x * scaleX
+        );
 
 
     const screenY =
@@ -846,27 +1184,36 @@ function showDetectedPosition(
 // ============================================
 
 function drawAirWriting(
-
     cameraX,
-
     cameraY
-
 ) {
 
-    const drawX =
-        cameraX *
+    /*
+     * Front camera preview is mirrored.
+     * Therefore mirror X for writing too.
+     */
+
+    const normalizedX =
+        1 -
         (
-            drawingCanvas.width /
+            cameraX /
             processingCanvas.width
         );
 
 
+    const normalizedY =
+        cameraY /
+        processingCanvas.height;
+
+
+    const drawX =
+        normalizedX *
+        drawingCanvas.width;
+
+
     const drawY =
-        cameraY *
-        (
-            drawingCanvas.height /
-            processingCanvas.height
-        );
+        normalizedY *
+        drawingCanvas.height;
 
 
     // ========================================
@@ -874,19 +1221,15 @@ function drawAirWriting(
     // ========================================
 
     if (
-
         previousX === null ||
         previousY === null
-
     ) {
 
         previousX =
             drawX;
 
-
         previousY =
             drawY;
-
 
         return;
 
@@ -914,30 +1257,26 @@ function drawAirWriting(
         );
 
 
-    // ========================================
-    // DRAW
-    // ========================================
+    /*
+     * Reject sudden jumps.
+     */
 
     if (
-        distance < 80
+        distance < 70
     ) {
 
         drawingContext.beginPath();
 
 
         drawingContext.moveTo(
-
             previousX,
             previousY
-
         );
 
 
         drawingContext.lineTo(
-
             drawX,
             drawY
-
         );
 
 
@@ -965,7 +1304,6 @@ function drawAirWriting(
     previousX =
         drawX;
 
-
     previousY =
         drawY;
 
@@ -985,14 +1323,11 @@ function stopCamera() {
     previousX =
         null;
 
-
     previousY =
         null;
 
-
     smoothX =
         null;
-
 
     smoothY =
         null;
@@ -1000,185 +1335,4 @@ function stopCamera() {
 
     if (cameraStream) {
 
-        cameraStream
-            .getTracks()
-            .forEach(
-
-                function(track) {
-
-                    track.stop();
-
-                }
-
-            );
-
-
-        cameraStream =
-            null;
-
-    }
-
-
-    camera.srcObject =
-        null;
-
-
-    detectedDot.style.display =
-        "none";
-
-
-    cameraMessage.style.display =
-        "block";
-
-
-    cameraMessage.innerText =
-        "Camera stopped";
-
-
-    startCameraBtn.disabled =
-        !openCVReady;
-
-
-    stopCameraBtn.disabled =
-        true;
-
-
-    statusText.innerText =
-        "Camera stopped";
-
-}
-
-
-// ============================================
-// CLEAR
-// ============================================
-
-function clearCanvas() {
-
-    drawingContext.fillStyle =
-        "white";
-
-
-    drawingContext.fillRect(
-
-        0,
-
-        0,
-
-        drawingCanvas.width,
-
-        drawingCanvas.height
-
-    );
-
-
-    previousX =
-        null;
-
-
-    previousY =
-        null;
-
-
-    statusText.innerText =
-        "Writing cleared";
-
-}
-
-
-// ============================================
-// SAVE
-// ============================================
-
-function saveImage() {
-
-    const image =
-        drawingCanvas.toDataURL(
-            "image/png"
-        );
-
-
-    const link =
-        document.createElement(
-            "a"
-        );
-
-
-    link.href =
-        image;
-
-
-    link.download =
-        "air-writing.png";
-
-
-    document.body.appendChild(
-        link
-    );
-
-
-    link.click();
-
-
-    document.body.removeChild(
-        link
-    );
-
-
-    statusText.innerText =
-        "Image saved 💾";
-
-}
-
-
-// ============================================
-// BUTTONS
-// ============================================
-
-startCameraBtn.addEventListener(
-
-    "click",
-
-    startCamera
-
-);
-
-
-stopCameraBtn.addEventListener(
-
-    "click",
-
-    stopCamera
-
-);
-
-
-clearBtn.addEventListener(
-
-    "click",
-
-    clearCanvas
-
-);
-
-
-saveBtn.addEventListener(
-
-    "click",
-
-    saveImage
-
-);
-
-
-// ============================================
-// PAGE CLOSE
-// ============================================
-
-window.addEventListener(
-
-    "beforeunload",
-
-    stopCamera
-
-);
+        cameraSt
