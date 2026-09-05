@@ -2,56 +2,77 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Air Pen Writing - Version 4</title>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Air Pen Writing - Version 5</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
+<div class="app">
+
     <h1>✍️ Air Pen Writing</h1>
 
     <p class="subtitle">
-        Version 4 • Front Camera • OpenCV.js
+        Version 5 • Front & Back Camera • OpenCV.js
     </p>
 
-    <div class="camera-container">
+    <!-- CAMERA -->
+    <div class="camera-section">
 
-        <video
-            id="camera"
-            autoplay
-            muted
-            playsinline>
-        </video>
+        <div id="cameraContainer">
 
-        <canvas id="processingCanvas"></canvas>
+            <video id="camera"
+                   autoplay
+                   muted
+                   playsinline>
+            </video>
 
-        <div id="detectedDot"></div>
+            <canvas id="processingCanvas"></canvas>
 
-        <div id="cameraMessage">
-            Camera not started
+            <div id="detectedDot"></div>
+
+            <div id="cameraMessage">
+                Camera is not started
+            </div>
+
+        </div>
+
+        <div id="cameraMode">
+            Camera:
+            <strong>Front</strong>
         </div>
 
     </div>
 
+
+    <!-- STATUS -->
     <div id="status">
         Loading OpenCV...
     </div>
 
+
+    <!-- CONTROLS -->
     <div class="controls">
 
         <button id="startCameraBtn" disabled>
-            📷 Start Front Camera
+            📷 Start Camera
+        </button>
+
+        <button id="switchCameraBtn" disabled>
+            🔄 Switch Camera
         </button>
 
         <button id="stopCameraBtn" disabled>
-            ⛔ Stop Camera
+            ⛔ Stop
         </button>
 
         <button id="clearBtn">
-            🗑 Clear
+            🧹 Clear
         </button>
 
         <button id="saveBtn">
@@ -60,58 +81,59 @@
 
     </div>
 
-    <div class="drawing-container">
 
+    <!-- DRAWING AREA -->
+    <h2>Air Writing Area</h2>
+
+    <div class="canvas-wrapper">
         <canvas id="drawingCanvas"></canvas>
-
     </div>
 
+
+    <!-- INSTRUCTIONS -->
     <div class="instructions">
 
-        <h2>How to use</h2>
+        <h2>How to Use</h2>
 
-        <p>
-            1. Use a normal ball pen.
-        </p>
+        <ol>
+            <li>Put a small bright green/yellow marker or tape on the pen tip.</li>
 
-        <p>
-            2. Start the front camera.
-        </p>
+            <li>Allow camera permission.</li>
 
-        <p>
-            3. Keep a plain light background.
-        </p>
+            <li>Press <b>Start Camera</b>.</li>
 
-        <p>
-            4. Keep the pen clearly visible.
-        </p>
+            <li>Keep the colored pen tip visible to the camera.</li>
 
-        <p>
-            5. Move the pen tip in the air.
-        </p>
+            <li>Move the pen in the air like you are writing.</li>
 
-        <p>
-            6. The red point shows the estimated pen tip.
-        </p>
+            <li>The red dot shows the detected pen tip.</li>
 
-        <p>
-            7. The movement is transferred to the white
-            writing area.
-        </p>
+            <li>The detected movement is converted into writing.</li>
+
+            <li>Use <b>Switch Camera</b> to change between front and back cameras.</li>
+
+            <li>Press <b>Clear</b> to erase the writing.</li>
+
+            <li>Press <b>Save</b> to save your writing.</li>
+        </ol>
+
+        <div class="tip">
+            💡 For best results, use a small bright green or yellow
+            sticker at the pen tip and keep the background reasonably plain.
+        </div>
 
     </div>
 
-    <!-- OpenCV.js -->
+</div>
 
-    <script
-        async
-        src="https://docs.opencv.org/4.x/opencv.js"
-        onload="onOpenCvReady();">
-    </script>
 
-    <!-- Project JavaScript -->
+<!-- OpenCV.js -->
+<script
+    src="https://docs.opencv.org/4.x/opencv.js"
+    onload="onOpenCvReady()">
+</script>
 
-    <script src="script.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>
