@@ -22,31 +22,48 @@
     </p>
 
     <!-- CAMERA -->
-    <div class="camera-section">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <div id="cameraContainer">
+    <title>Air Pen Writing - V5</title>
 
-            <video id="camera"
-                   autoplay
-                   muted
-                   playsinline>
-            </video>
+    <link rel="stylesheet" href="style.css">
+</head>
 
-            <canvas id="processingCanvas"></canvas>
+<body>
 
-            <div id="detectedDot"></div>
+<div class="app">
 
-            <div id="cameraMessage">
-                Camera is not started
-            </div>
+    <h1>✍️ Air Pen Writing</h1>
 
+    <p class="subtitle">
+        Version 5 • Front & Back Camera
+    </p>
+
+    <!-- CAMERA -->
+    <div id="cameraContainer">
+
+        <video id="camera"
+               autoplay
+               muted
+               playsinline>
+        </video>
+
+        <canvas id="processingCanvas"></canvas>
+
+        <div id="detectedDot"></div>
+
+        <div id="cameraMessage">
+            Camera not started
         </div>
 
-        <div id="cameraMode">
-            Camera:
-            <strong>Front</strong>
-        </div>
+    </div>
 
+    <div id="cameraMode">
+        Camera: <strong>Front</strong>
     </div>
 
 
@@ -56,7 +73,7 @@
     </div>
 
 
-    <!-- CONTROLS -->
+    <!-- BUTTONS -->
     <div class="controls">
 
         <button id="startCameraBtn" disabled>
@@ -82,10 +99,10 @@
     </div>
 
 
-    <!-- DRAWING AREA -->
+    <!-- WRITING CANVAS -->
     <h2>Air Writing Area</h2>
 
-    <div class="canvas-wrapper">
+    <div id="drawingContainer">
         <canvas id="drawingCanvas"></canvas>
     </div>
 
@@ -96,30 +113,21 @@
         <h2>How to Use</h2>
 
         <ol>
-            <li>Put a small bright green/yellow marker or tape on the pen tip.</li>
-
+            <li>Put a small bright green or yellow sticker on the pen tip.</li>
             <li>Allow camera permission.</li>
-
             <li>Press <b>Start Camera</b>.</li>
-
-            <li>Keep the colored pen tip visible to the camera.</li>
-
-            <li>Move the pen in the air like you are writing.</li>
-
-            <li>The red dot shows the detected pen tip.</li>
-
-            <li>The detected movement is converted into writing.</li>
-
-            <li>Use <b>Switch Camera</b> to change between front and back cameras.</li>
-
-            <li>Press <b>Clear</b> to erase the writing.</li>
-
-            <li>Press <b>Save</b> to save your writing.</li>
+            <li>Keep the colored tip visible.</li>
+            <li>Move the pen slowly in the air.</li>
+            <li>The red dot shows the detected tip.</li>
+            <li>The movement is drawn on the writing canvas.</li>
+            <li>Use <b>Switch Camera</b> for front/back camera.</li>
+            <li>Use <b>Clear</b> to erase the drawing.</li>
+            <li>Use <b>Save</b> to save the drawing.</li>
         </ol>
 
         <div class="tip">
-            💡 For best results, use a small bright green or yellow
-            sticker at the pen tip and keep the background reasonably plain.
+            💡 Best results: use a bright green/yellow marker at the
+            pen tip and avoid a background containing similar colors.
         </div>
 
     </div>
@@ -127,10 +135,9 @@
 </div>
 
 
-<!-- OpenCV.js -->
-<script
-    src="https://docs.opencv.org/4.x/opencv.js"
-    onload="onOpenCvReady()">
+<!-- OpenCV -->
+<script async
+        src="https://docs.opencv.org/4.x/opencv.js">
 </script>
 
 <script src="script.js"></script>
